@@ -7,13 +7,13 @@ class WIRE {
         this.dotTarget = dotTarget;
 
         this.wirepart = `<div class="wire-pivot">
-            <div class="wire-texture"></div>
+            <div class="wire-texture" data-click="WIRE"></div>
         </div>`
 
         // creo el elemento html
         this.element = $(`<div class="wire" data-index="${index}">
             <div class="wireparts position-relative">
-                ${this.wirepart}
+                
             </div>
         </div>`);
         // lo añado a la mesa
@@ -27,43 +27,73 @@ class WIRE {
         this.element.css("top", this.y);
 
         this.wireparts = this.element.children().eq(0);
-        this.lastWirepart = this.wireparts.children().last();
-        this.lastWirepartTexture = this.lastWirepart.children().eq(0);
-        this.lastWirepart.css("top",0)
-        this.lastWirepart.css("left",0)
+        
+        this.addFirstWirepart();    
 
     }
 
-    addDotTarget(dot){
+    addFirstWirepart(){
+        this.wireparts.append( this.wirepart );
+        this.lastWirepart = this.wireparts.children().last();
+        this.lastWirepartTexture = this.lastWirepart.children().eq(0);
+        this.lastWirepart.css("top", 0);
+        this.lastWirepart.css("left", 0);
+        this.lastWirepart.attr("data-dir", "right");
+    }
+
+    addDotTarget(dot) {
         this.dotTarget = dot;
     }
 
+    adjustLastWirepart(width, height) {
+        const lastWirepartTexture = this.lastWirepartTexture;
+        if ( Math.abs(width) > Math.abs(height) || (width !== undefined && height === undefined) ) {
+            // console.log("aaa", width);
+            lastWirepartTexture.css("width", Math.abs(width));
+            if (width > 0) {
+                this.lastWirepart.css("transform", "rotate(0deg)");
+                this.lastWirepart.attr("data-dir", "right");
+            } else {
+                this.lastWirepart.css("transform", "rotate(180deg)");
+                this.lastWirepart.attr("data-dir", "left");
+            }
+        } else {
+            lastWirepartTexture.css("width", Math.abs(height));
+            if (height > 0) {
+                this.lastWirepart.css("transform", "rotate(90deg)");
+                this.lastWirepart.attr("data-dir", "bottom");
+            } else {
+                this.lastWirepart.css("transform", "rotate(270deg)");
+                this.lastWirepart.attr("data-dir", "top");
+            }
+        }
+    }
     addWirepart() {
 
-        const top = parseFloat(this.lastWirepart.css("top").replaceAll("px",""));
-        const left = parseFloat(this.lastWirepart.css("left").replaceAll("px",""));
+        const top = parseFloat(this.lastWirepart.css("top").replaceAll("px", ""));
+        const left = parseFloat(this.lastWirepart.css("left").replaceAll("px", ""));
         const dir = this.lastWirepart.data("dir");
-        const length = parseFloat(this.lastWirepartTexture.css("width").replaceAll("px",""))-8;
+        const length = parseFloat(this.lastWirepartTexture.css("width").replaceAll("px", "")) - 8;
 
         const currentWirepart = $(this.wirepart)
         this.wireparts.append(currentWirepart);
         this.lastWirepart = currentWirepart;
         this.lastWirepartTexture = this.lastWirepart.children().eq(0);
 
-        if(dir === "right"){
-            this.lastWirepart.css("left", left+length);
+        if (dir === "right") {
+            this.lastWirepart.css("left", left + length);
             this.lastWirepart.css("top", top);
         }
-        if(dir === "left"){
-            this.lastWirepart.css("left", left-length);
+        if (dir === "left") {
+            this.lastWirepart.css("left", left - length);
             this.lastWirepart.css("top", top);
         }
-        if(dir === "top"){
-            this.lastWirepart.css("top", top-length);
+        if (dir === "top") {
+            this.lastWirepart.css("top", top - length);
             this.lastWirepart.css("left", left);
         }
-        if(dir === "bottom"){
-            this.lastWirepart.css("top", top+length);
+        if (dir === "bottom") {
+            this.lastWirepart.css("top", top + length);
             this.lastWirepart.css("left", left);
         }
 
@@ -73,7 +103,7 @@ class WIRE {
         this.glowed = true;
         this.element.addClass("glow");
 
-        if(this.dotTarget){
+        if (this.dotTarget) {
             this.dotTarget.glow();
         }
     }
@@ -81,7 +111,7 @@ class WIRE {
         this.glowed = false;
         this.element.removeClass("glow");
 
-        if(this.dotTarget){
+        if (this.dotTarget) {
             this.dotTarget.unglow();
         }
     }

@@ -4,25 +4,32 @@ const board = new Board();
 setTimeout(() => {
 
     // $("#BULB").click();
-    // $("#BULB").click();
-    $("#AND").click();
+    // $("#NAND").click();
+    // $("#AND").click();
+    // $("#OR").click();
+    // $("#NAND").click();
+    // $("#XNOR2").click();
+    // $("#2NOT").click();
+    $("#F-ADDER").click();
+    // $("#sum1").click();
+    // $("#1ByteAdder").click();
     
-    setTimeout(() => {
+    // setTimeout(() => {
 
-        // $("#NOT").click();
-        // $("#BULB").click();
+    //     // $("#NOT").click();
+    //     // $("#BULB").click();
 
-        // setTimeout(() => {
+    //     // setTimeout(() => {
 
-        //     $("#AND").click();
+    //     //     $("#AND").click();
 
-        // }, 1);
+    //     // }, 1);
 
-    }, 1);
+    // }, 1);
 
 }, 1);
 
-// function radians_to_degrees(radians) {
-//     var pi = Math.PI;
-//     return radians * (180 / pi);
-// }
+// // function radians_to_degrees(radians) {
+// //     var pi = Math.PI;
+// //     return radians * (180 / pi);
+// // }

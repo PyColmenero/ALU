@@ -1,0 +1,70 @@
+{
+    "outputs": [false],
+    "inputs": [
+        {
+            "connections": [
+                {"componentindex": 1,"dotindex": "in1"}
+            ]
+        },{
+            "connections": [
+                {"componentindex": 2,"dotindex": "in1"},
+                {"componentindex": 3,"dotindex": "in2"}
+            ]
+        }
+    ],
+    "components": [
+        {
+            "type": "AND",
+            "connections": {
+                "out1": [
+                    {"componentindex": 4,"dotindex": "in1"}
+                ]
+            },
+            "inputs": [false,false],
+            "outputs": [false]
+        },
+        {
+            "type": "NOT",
+            "connections": {
+                "out1": [
+                    {"componentindex": 0,"dotindex": "in1"}
+                ]
+            },
+            "inputs": [false],
+            "outputs": [false]
+        },
+        {
+            "type": "NOT",
+            "connections": {
+                "out1": [
+                    {"componentindex": 0,"dotindex": "in2"},
+                    {"componentindex": 3,"dotindex": "in1"}
+                ]
+            },
+            "inputs": [false],
+            "outputs": [false]
+        },
+        {
+            "type": "OR",
+            "connections": {
+                "out1": [
+                    {"componentindex": 4,"dotindex": "in2"}
+                ]
+            },
+            "inputs": [false,false],
+            "outputs": [false]
+        },
+        {
+            "type": "AND",
+            "connections": {
+                "out1": [
+                    {
+                        "bulbindex": 0
+                    }
+                ]
+            },
+            "inputs": [false,false],
+            "outputs": [false]
+        }
+    ]
+}

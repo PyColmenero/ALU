@@ -13,7 +13,7 @@ class OR {
         this.moving = false;
 
         this.element = $(`
-        <div class="ALU-Component OR" data-gate="OR" style="top: 10px; left: 10px;" data-index="${index}">
+        <div class="ALU-Component OR" data-gate="OR" style="top: 30px; left: 30px;" data-index="${index}">
             <div class="component-inner">
                 <div class="inDots h-100">
                     <div class="dot h-50 d-flex align-items-center in1" data-type="in1">
@@ -24,7 +24,12 @@ class OR {
                     </div>
                 </div>
                 <div class="component-image">
-                    <img src="./images/or.png" alt="" data-click="COMPONENT">
+                    <div class="ALU-Component-border" style="height: 50px;">
+                        <div class="ALU-Component-bg" data-click="COMPONENT">
+                            <p class="m-0 fw-bold" data-click="COMPONENT">OR</p>
+                        </div>
+                    </div>
+                    
                 </div>
                 <div class="outDots h-100">
                     <div class="dot h-100 d-flex align-items-center out1" data-type="out1">
@@ -61,13 +66,13 @@ class OR {
 
         if (in1.glowed || in2.glowed) {
             this.dots.out1.glow();
-            if (this.dots.out1.wire) {
-                this.dots.out1.wire.glow();
+            for (const wire of this.dots.out1.wires) {
+                wire.glow();
             }
         } else {
             this.dots.out1.unglow();
-            if (this.dots.out1.wire) {
-                this.dots.out1.wire.unglow();
+            for (const wire of this.dots.out1.wires) {
+                wire.unglow();
             }
         }
     }

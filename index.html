@@ -49,51 +49,87 @@
             position: relative;
         }
 
-        .board-toolspanel {
+        #board-toolspanel {
             height: 15%;
             background-color: black;
+            overflow-y: scroll;
+            padding-bottom: 1rem;
+            /* box-shadow: 2px 2px solid white inset ; */
         }
 
         .component-inner {
             position: relative;
         }
 
-        .ALU-Component{
+        .ALU-Component {
             z-index: 997;
         }
-        .ALU-Component, .wire {
+
+        .ALU-Component,
+        .wire {
             display: inline-block;
             position: absolute;
         }
-        .ALU-Component-Tool {
+
+        .ALU-Component-tool {
             padding: 1vh;
+            
+            display: flex;
+            align-items: center;
         }
 
-        .ALU-Component img {
-            height: 9vh;
+        .ALU-Component-border {
+            background-color: grey;
+            width: 12vh;
+            border-radius: .5rem;
+            padding: .3vh;
         }
-        .ALU-Component-Tool img {
-            height: 11vh;
+        .ALU-Component-tool .ALU-Component-border{
+            width: 10vh;
+            height: 6vh;
+        }
+        .ALU-Component-tool p {
+            font-size: 10px !important;
+        }
+
+        .ALU-Component-bg {
+            border-radius: .3rem;
+            width: 100%;
+            height: 100%;
+            background-color: rgb(0, 0, 0);
+        }
+
+        .ALU-Component-bg {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ALU-Component p, .ALU-Component-tool p {
+            color: whitesmoke;
         }
 
         .inDots {
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
-            left: -4%;
+            left: -6%;
         }
 
         .outDots {
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
-            right: -4%;
+            right: -6%;
         }
 
-        .dot, .dot-texture {
-
-
+        .dot,
+        .dot-texture {
             z-index: 997;
+        }
+        .dot-texture {
+            border: 1px solid grey;
+            /* box-shadow: 0px 0px 2px rgba(255, 255, 255, 0.242); */
         }
 
         .dot>div {
@@ -101,11 +137,11 @@
             height: .8rem;
             border-radius: 1rem;
             background-color: black;
-
-
         }
 
-        .wire, .wire-pivot {
+
+        .wire,
+        .wire-pivot {
             /* padding: .5rem; */
             width: .5rem;
             height: .5rem;
@@ -113,34 +149,46 @@
             /* margin-left: .3rem;
             margin-top: .3rem; */
         }
-        .wire-pivot{
+
+        .wire-pivot {
             position: absolute;
         }
 
         .wire-texture {
             width: .5rem;
             height: .5rem;
-            background-color: rgb(100, 78, 78);
+            background-color: rgba(157, 123, 123, 0.3);
             z-index: 996;
+            /* background- */
         }
 
         .wire {
             z-index: 996;
         }
 
-        /* .glow,
-        .glow>div {
-            background-color: orange !important;
-        } */
+        .AND .ALU-Component-bg {
+            background-color: rgb(255, 31, 31) !important;
+        }
+        .OR .ALU-Component-bg {
+            background-color: rgb(70, 240, 44) !important;
+        }
+        .NOT .ALU-Component-bg {
+            background-color: rgb(0, 163, 255) !important;
+        }
+        .notcustom .ALU-Component-border {
+            background-color: rgb(86, 86, 86) !important;
+        }
 
-        .bulb.glow{
+        .bulb.glow {
             background-color: orange !important;
         }
-        .dot.glow .dot-texture{
+
+        .dot.glow .dot-texture {
             background-color: orange !important;
         }
-        .wire.glow .wire-texture{
-            background-color: orange !important;
+
+        .wire.glow .wire-texture {
+            background-color: rgba(255, 166, 0, 0.4) !important;
         }
 
 
@@ -182,7 +230,7 @@
         .bulb {
             width: .8rem;
             height: .8rem;
-            background-color: rgb(45, 0, 0);
+            background-color: #C0C0C0;
             position: absolute;
             left: 50%;
             transform: translate(-50%, -50%);
@@ -224,6 +272,59 @@
 
                     <div id="board" class="position-relative">
 
+
+
+                        <!-- <div class="ALU-Component NOT" data-gate="NOT" style="top: 30px; left: 30px;" data-index="0">
+                            <div class="component-inner">
+                                <div class="inDots h-100">
+                                    <div class="dot h-100 d-flex align-items-center in1" data-type="in1">
+                                        <div class="dot-texture" data-click="INPUT-DOT"></div>
+                                    </div>
+                                </div>
+                                <div class="component-image">
+                                    <div class="ALU-Component-border" style="height: 40px;">
+                                        <div class="ALU-Component-bg">
+                                            <p class="m-0 fw-bold">NOT</p>
+                                        </div>
+                                    </div>
+                                    
+                                </div>
+                                <div class="outDots h-100">
+                                    <div class="dot h-100 d-flex align-items-center out1 glow" data-type="out1">
+                                        <div class="dot-texture" data-click="OUTPUT-DOT"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div> -->
+                        <!-- <div class="ALU-Component NAND" data-gate="NAND" style="top: 10px; left: 10px;" data-index="0">
+                            <div class="component-inner">
+                                <div class="inDots h-100">
+                                    <div class="dot h-50 d-flex align-items-center in1" data-type="in1">
+                                        <div class="dot-texture" data-click="INPUT-DOT"></div>
+                                    </div>
+                                    <div class="dot h-50 d-flex align-items-center in2" data-type="in2">
+                                        <div class="dot-texture" data-click="INPUT-DOT"></div>
+                                    </div>
+                                </div>
+                                <div class="component-image">
+                                    
+                                    <div class="custom-component-border">
+                                        <div class="custom-component-bg">
+                                            <p class="m-0 fw-bold">NAND</p>
+                                        </div>
+                                    </div>
+                                    
+                                </div>
+                                <div class="outDots h-100">
+                                    <div class="dot h-100 d-flex align-items-center out1 glow" data-type="out1">
+                                        <div class="dot-texture" data-click="OUTPUT-DOT"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div> -->
+
+
+
                     </div>
 
                     <div class="outputs-panel">
@@ -245,27 +346,50 @@
                     </div>
                 </div>
 
-                <div class="board-toolspanel d-flex">
+                <div id="board-toolspanel" class="d-flex flex-wrap overflow-y-scroll">
 
-                    <!-- <div class="ALU-Component BULB position-relative" data-gate="BULB" id="BULB">
+                    <div class="ALU-Component-tool notcustom AND" data-gate="AND" id="AND">
                         <div class="component-inner">
-                            <img src="./images/bulb.png" alt="" width="100%" class="p-2">
+                            <div class="component-image">
+                                <div class="ALU-Component-border">
+                                    <div class="ALU-Component-bg" data-click="COMPONENT">
+                                        <p class="m-0 fw-bold" data-click="COMPONENT">AND</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </div> -->
-                    <div class="ALU-Component ALU-Component-Tool AND position-relative" data-gate="AND" id="AND">
-                        <img src="./images/and.png" alt="">
                     </div>
 
-                    <div class="ALU-Component ALU-Component-Tool OR position-relative" data-gate="OR">
+                    <div class="ALU-Component-tool notcustom OR" data-gate="OR" id="OR">
+                        <div class="component-inner">
+                            <div class="component-image">
+                                <div class="ALU-Component-border">
+                                    <div class="ALU-Component-bg" data-click="COMPONENT">
+                                        <p class="m-0 fw-bold" data-click="COMPONENT">OR</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ALU-Component-tool notcustom NOT" data-gate="NOT" id="NOT">
+                        <div class="component-inner">
+                            <div class="component-image">
+                                <div class="ALU-Component-border">
+                                    <div class="ALU-Component-bg" data-click="COMPONENT">
+                                        <p class="m-0 fw-bold" data-click="COMPONENT">NOT</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- <div class="ALU-Component-tool OR position-relative" data-gate="OR">
                         <img src="./images/or.png" alt="">
                     </div>
 
-                    <div class="ALU-Component ALU-Component-Tool NOT position-relative" data-gate="NOT" id="NOT">
+                    <div class="ALU-Component-tool NOT position-relative" data-gate="NOT" id="NOT">
                         <img src="./images/not.png" alt="">
-                    </div>
-
-                    <!-- <div class="ALU-Component NAND position-relative" data-gate="NAND" id="NAND">
-                        <img src="./images/nand.png" alt="">
                     </div> -->
 
                 </div>
@@ -282,6 +406,7 @@
     <script src="./js/gates/AND.js"></script>
     <script src="./js/gates/OR.js"></script>
     <script src="./js/gates/NOT.js"></script>
+    <script src="./js/gates/WILDCART.js"></script>
     <script src="./js/DragDroper.js"></script>
     <script src="./js/Board.js"></script>
     <script src="./js/app.js"></script>

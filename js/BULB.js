@@ -7,7 +7,7 @@ class BULB {
         this.type = type;
         this.element = element;
 
-        this.wire = undefined;
+        this.wires = [];
 
     }
 
@@ -29,20 +29,24 @@ class BULB {
         }
     }
     addWire(wire) {
-        this.wire = wire;
+        this.wires.push(wire);
     }
     transmit() {
-        if (this.wire) {
+
+        for (const wire of this.wires) {
+
             if (this.glowed) {
 
-                this.wire.glow();
+                wire.glow();
 
             } else {
 
-                this.wire.unglow();
+                wire.unglow();
 
             }
+
         }
+
     }
 
 }

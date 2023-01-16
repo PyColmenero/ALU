@@ -4,11 +4,11 @@ class Dot {
         this.inout = inout;
         this.element = element;
         this.componentParent = componentParent;
-        this.wire = undefined;
+        this.wires = [];
         this.glowed = false;
     }
     glow() {
-        console.log("glowed");
+        // console.log("glowed");
         this.glowed = true;
         this.element.addClass("glow");
         if (this.inout) {
@@ -23,6 +23,6 @@ class Dot {
         }
     }
     addWire(wire){
-        this.wire = wire;
+        this.wires.push( wire );
     }
 }

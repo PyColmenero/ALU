@@ -5,15 +5,15 @@ class AND {
         this.name = "AND";
         this.index = index;
 
-        this.x = 10;
-        this.y = 10;
+        this.x = 30;
+        this.y = 30;
         this.startMovementX = undefined;
         this.startMovementY = undefined;
 
         this.moving = false;
 
         this.element = $(`
-        <div class="ALU-Component AND" data-gate="AND" style="top: 10px; left: 10px;" data-index="${index}">
+        <div class="ALU-Component AND" data-gate="AND" style="top: 30px; left: 30px;" data-index="${index}">
             <div class="component-inner">
                 <div class="inDots h-100">
                     <div class="dot h-50 d-flex align-items-center in1" data-type="in1">
@@ -24,7 +24,11 @@ class AND {
                     </div>
                 </div>
                 <div class="component-image">
-                    <img src="./images/and.png" alt="" data-click="COMPONENT">
+                    <div class="ALU-Component-border" style="height: 50px;">
+                        <div class="ALU-Component-bg" data-click="COMPONENT">
+                            <p class="m-0 fw-bold" data-click="COMPONENT">AND</p>
+                        </div>
+                    </div>
                 </div>
                 <div class="outDots h-100">
                     <div class="dot h-100 d-flex align-items-center out1" data-type="out1">
@@ -49,6 +53,14 @@ class AND {
             this.dots.in1,
             this.dots.in2
         ]
+        this.outputDots = [
+            this.dots.out1
+        ]
+        // this.dots = [
+        //     this.dots.in1,
+        //     this.dots.in2,
+        //     this.dots.out1
+        // ]
     }
 
     test() {
@@ -57,13 +69,13 @@ class AND {
 
         if (in1.glowed && in2.glowed) {
             this.dots.out1.glow();
-            if (this.dots.out1.wire) {
-                this.dots.out1.wire.glow();
+            for (const wire of this.dots.out1.wires) {
+                wire.glow();
             }
         } else {
             this.dots.out1.unglow();
-            if (this.dots.out1.wire) {
-                this.dots.out1.wire.unglow();
+            for (const wire of this.dots.out1.wires) {
+                wire.unglow();
             }
         }
     }

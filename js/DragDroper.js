@@ -2,17 +2,6 @@ class DragDroper {
 
     constructor() {
 
-        const componentToolButtons = $(".ALU-Component-Tool");
-
-        componentToolButtons.click(function () {
-
-            const clickedComponent = $(this).data("gate");
-            console.log(clickedComponent);
-            board.add(clickedComponent)
-
-
-        });
-
         $("#board-playground").on("mousedown", function (e) {
 
             e.preventDefault();
@@ -22,44 +11,104 @@ class DragDroper {
             window.startTarget = target;
             window.startTargetType = targetType;
 
-            if (targetType) {
-                console.log(targetType);
 
+            if (targetType) {
+                console.log("START CLICK:", targetType);
 
                 if (window.startTargetType === "COMPONENT") {
 
-                    const gate = board.getGateByImageElement(target);
+                    if (e.which === 1) {
+                        const gate = board.getGateByImageElement(target);
 
-                    window.startComponent = gate;
+                        window.startComponent = gate;
 
-                    gate.startMovementX = e.clientX;
-                    gate.startMovementY = e.clientY;
+                        gate.startMovementX = e.clientX;
+                        gate.startMovementY = e.clientY;
 
-                    gate.element.css("z-index", 999);
-
-                }
-                if (window.startTargetType === "INPUT-BULB") {
-
-
+                        gate.element.css("z-index", 999);
+                    }
 
                 }
-
-
             }
-
-
-
         });
+
         $("#board-playground").on("mousemove", function (e) {
 
             if (window.startTargetType === "COMPONENT") {
 
-                const component = window.startComponent;
-                const diffX = e.clientX - component.startMovementX;
-                const diffY = e.clientY - component.startMovementY;
+                if (window.startComponent) {
+                    const component = window.startComponent;
+                    const diffX = e.clientX - component.startMovementX;
+                    const diffY = e.clientY - component.startMovementY;
 
-                component.element.css("top", diffY + component.y);
-                component.element.css("left", diffX + component.x);
+                    const maxX = Math.floor(board.elementBbox.width / 30) * 26;
+                    const maxY = Math.floor(board.elementBbox.height / 30) * 26;
+
+                    const roundTo = 10;
+                    const x = Math.min(
+                        Math.max(
+                            Math.round((diffX + component.x) / roundTo) * roundTo,
+                            roundTo
+                        ),
+                        maxX
+                    );
+                    const y = Math.min(
+                        Math.max(
+                            Math.round((diffY + component.y) / roundTo) * roundTo,
+                            roundTo
+                        ),
+                        maxY
+                    );
+
+                    component.element.css("left", x);
+                    component.element.css("top", y);
+
+
+
+                    for (const key in component.dots) {
+                        if (Object.hasOwnProperty.call(component.dots, key)) {
+
+                            const dot = component.dots[key];
+
+                            for (const wire of dot.wires) {
+
+                                const dotBbox = dot.element.children()[0].getBoundingClientRect();
+                                const wireBbox = wire.element[0].getBoundingClientRect();
+
+                                let width = (dotBbox.x - wireBbox.x) / 2;
+                                let height = dotBbox.y - wireBbox.y;
+
+                                if (width < 0) width -= 8;
+                                if (width > 0) width += 8;
+                                // if (height > 0) height += 14;
+
+                                const wirepartsLength = wire.wireparts.children().length;
+                                if(wirepartsLength >= 3){
+
+                                    wire.wireparts.children().last().remove();
+                                    wire.wireparts.children().last().remove();
+                                    wire.wireparts.children().last().remove();
+                                    if(wirepartsLength === 3){
+                                        wire.lastWirepart = undefined
+                                        wire.addFirstWirepart();
+                                    } else {
+                                        wire.lastWirepart = wire.wireparts.children().last();
+                                    }
+
+                                    wire.adjustLastWirepart(width, undefined);
+                                    wire.addWirepart();
+                                    wire.adjustLastWirepart(undefined, height);
+                                    wire.addWirepart();
+                                    wire.adjustLastWirepart(width, undefined);
+                                    
+
+                                } 
+
+                            }
+                        }
+                    }
+                }
+
 
                 // const dots = Object.entries(component.dots);
 
@@ -80,30 +129,11 @@ class DragDroper {
                 // }
                 const wire = window.currentWire;
                 const lastWirepart = wire.lastWirepart;
-                const lastWirepartTexture = wire.lastWirepartTexture;
                 const bbox = lastWirepart[0].getBoundingClientRect();
                 let width = (e.clientX - bbox.x);
                 let height = (e.clientY - bbox.y);
 
-                if (Math.abs(width) > Math.abs(height)) {
-                    lastWirepartTexture.css("width", Math.abs(width));
-                    if (width > 0) {
-                        lastWirepart.css("transform", "rotate(0deg)");
-                        lastWirepart.attr("data-dir", "right")
-                    } else {
-                        lastWirepart.css("transform", "rotate(180deg)");
-                        lastWirepart.attr("data-dir", "left")
-                    }
-                } else {
-                    lastWirepartTexture.css("width", Math.abs(height));
-                    if (height > 0) {
-                        lastWirepart.css("transform", "rotate(90deg)");
-                        lastWirepart.attr("data-dir", "bottom")
-                    } else {
-                        lastWirepart.css("transform", "rotate(270deg)");
-                        lastWirepart.attr("data-dir", "top")
-                    }
-                }
+                wire.adjustLastWirepart(width, height);
 
 
             }
@@ -114,9 +144,8 @@ class DragDroper {
             const targetElement = e.target;
             const targetType = targetElement.dataset.click;
 
-
+            // SI ESTAMOS CREANDO UN WIRE
             if (window.dragdropMODE === "CREATING-WIRE") {
-
 
                 const wire = window.currentWire;
 
@@ -124,6 +153,29 @@ class DragDroper {
 
                     // he terminado de crear el WIRE
                     const dot = board.getDotByElement(targetElement);
+
+                    const wirepartsLength = wire.wireparts.children().length;
+                    if (wirepartsLength === 1) {
+
+                        const dotBbox = dot.element[0].getBoundingClientRect();
+                        const wireBbox = wire.element[0].getBoundingClientRect();
+
+                        let width = (dotBbox.x - wireBbox.x) / 2;
+                        let height = dotBbox.y - wireBbox.y;
+
+                        if (width < 0) width -= 8;
+                        if (width > 0) width += 8;
+                        if (height > 0) height += 18;
+
+                        wire.adjustLastWirepart(width, undefined);
+                        wire.addWirepart();
+                        wire.adjustLastWirepart(undefined, height);
+                        wire.addWirepart();
+                        wire.adjustLastWirepart(width, undefined);
+
+
+                    }
+
 
                     // si he empezado en desde un BULB
                     if (window.currentDot) {
@@ -150,6 +202,28 @@ class DragDroper {
                     // he terminado de crear el WIRE
                     const bulb = board.getBulbByElement(targetElement);
 
+                    const wirepartsLength = wire.wireparts.children().length;
+                    if (wirepartsLength === 1) {
+
+                        const dotBbox = bulb.element[0].getBoundingClientRect();
+                        const wireBbox = wire.element[0].getBoundingClientRect();
+
+                        let width = (dotBbox.x - wireBbox.x) / 2;
+                        let height = dotBbox.y - wireBbox.y;
+
+                        if (width < 0) width -= 8;
+                        if (width > 0) width += 8;
+                        if (height > 0) height += 18;
+
+                        wire.adjustLastWirepart(width, undefined);
+                        wire.addWirepart();
+                        wire.adjustLastWirepart(undefined, height);
+                        wire.addWirepart();
+                        wire.adjustLastWirepart(width, undefined);
+
+
+                    }
+
                     // si he empezado en desde un BULB
                     if (window.currentDot) {
                         window.currentDot.addWire(wire);
@@ -173,93 +247,113 @@ class DragDroper {
                 }
 
 
+            } else if (targetType) { // si no estamos creando un wire
 
+                console.log("FINAL CLICK:", targetType);
 
-            } else
+                if (window.startTargetType === "WIRE") {
+                    if (targetType === "WIRE") {
 
-                if (targetType) {
-                    console.log("targetType", targetType);
-
-                    if (window.startTargetType === "COMPONENT") {
-
-                        const component = window.startComponent;
-                        component.y = parseInt(component.element.css("top"));
-                        component.x = parseInt(component.element.css("left"));
-                        component.element.css("z-index", "");
-
-                        // mover al final de todos los elementos
-                        // para que se vea el primero
-                        component.element.insertAfter(board.element.children().last());
-
-                        window.startTarget = undefined;
-                        window.startTargetType = undefined;
-                    }
-                    if (window.startTargetType === "OUTPUT-DOT") {
-
-                        if (targetType === "OUTPUT-DOT") {
-
-                            if (e.which === 1) {
-
-                                const dotElement = window.startTarget;
-                                const dot = board.getDotByElement(dotElement);
-
-                                // inicio la creación de un wire
-                                if (window.dragdropMODE !== "CREATING-WIRE") {
-
-                                    window.dragdropMODE = "CREATING-WIRE";
-
-                                    window.currentWire = board.addWire(dot, undefined);
-                                    window.currentDot = dot;
-
-                                    // si el dot está previamente encendido, encender el cable
-                                    if(dot.glowed){
-                                        window.currentWire.glow()
-                                    }
-                                }
-                            }
-
+                        if (e.which === 3) {
+                            const wire = board.getWireFromTextureElement(targetElement);
+                            board.removeWire(wire.index)
                         }
 
                     }
-                    if (window.startTargetType === "INPUT-BULB") {
+                }
+                // empezó en component
+                if (window.startTargetType === "COMPONENT") {
 
-                        if (targetType === "INPUT-BULB") {
+                    if (targetType === "COMPONENT") {
+                        if (e.which === 3) {
 
-                            const bulbElement = window.startTarget;
-                            const bulb = board.getBulbByElement(bulbElement);
+                            // log
+                            board.removeGate(targetElement)
 
-                            if (e.which === 1) {
+                            return
+                        }
+                    }
+                    const component = window.startComponent;
+                    component.y = parseInt(component.element.css("top"));
+                    component.x = parseInt(component.element.css("left"));
+                    component.element.css("z-index", "");
 
-                                // inicio la creación de un wire
-                                if (window.dragdropMODE !== "CREATING-WIRE") {
+                    // mover al final de todos los elementos
+                    // para que se vea el primero
+                    component.element.insertAfter(board.element.children().last());
 
-                                    window.dragdropMODE = "CREATING-WIRE";
+                    window.startTarget = undefined;
+                    window.startTargetType = undefined;
+                }
+                if (window.startTargetType === "OUTPUT-DOT") {
 
-                                    window.currentWire = board.addWire(bulb, undefined);
-                                    window.currentBulb = bulb;
+                    if (targetType === "OUTPUT-DOT") {
 
-                                    // si el bulb está previamente encendido, encender el cable
-                                    if(bulb.glowed){
-                                        window.currentWire.glow()
-                                    }
+                        if (e.which === 1) {
+
+                            const dotElement = window.startTarget;
+                            const dot = board.getDotByElement(dotElement);
+
+                            // inicio la creación de un wire
+                            if (window.dragdropMODE !== "CREATING-WIRE") {
+
+                                window.dragdropMODE = "CREATING-WIRE";
+
+                                window.currentWire = board.addWire(dot, undefined);
+                                window.currentDot = dot;
+
+                                // si el dot está previamente encendido, encender el cable
+                                if (dot.glowed) {
+                                    window.currentWire.glow();
                                 }
                             }
-                            if (e.which === 3) {
-
-                                bulb.switch();
-
-                            }
-
-
                         }
-
 
                     }
 
                 }
+                if (window.startTargetType === "INPUT-BULB") {
+
+                    if (targetType === "INPUT-BULB") {
+
+                        const bulbElement = window.startTarget;
+                        const bulb = board.getBulbByElement(bulbElement);
+
+                        if (e.which === 1) {
+
+                            // inicio la creación de un wire
+                            if (window.dragdropMODE !== "CREATING-WIRE") {
+
+                                window.dragdropMODE = "CREATING-WIRE";
+
+                                window.currentWire = board.addWire(bulb, undefined);
+                                window.currentBulb = bulb;
+
+                                // si el bulb está previamente encendido, encender el cable
+                                if (bulb.glowed) {
+                                    window.currentWire.glow()
+                                }
+                            }
+                        }
+                        if (e.which === 3) {
+
+                            bulb.switch();
+
+                        }
 
 
+                    }
 
+
+                }
+
+            }
+
+
+            window.startComponent = undefined;
+            window.startTarget = undefined;
+            window.startTargetType = undefined;
+            // window.dragdropMODE = undefined;
             // if(window.dragdropMODE === "CREATING-WIRE"){
             // }
 
@@ -507,7 +601,7 @@ class DragDroper {
 
         //     }
         // });
-        $(document).on("contextmenu", function (e) {
+        $("#board-playground").on("contextmenu", function (e) {
             e.preventDefault();
         });
 

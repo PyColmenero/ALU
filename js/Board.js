@@ -3,16 +3,18 @@ class Board {
     constructor() {
 
         this.element = $("#board");
+        this.board_toolspanel = $("#board-toolspanel");
         this.elementBbox = this.element[0].getBoundingClientRect();
         this.x = this.elementBbox.x;
         this.y = this.elementBbox.y;
 
-        this.bulbs = [];
+        this.inputs = [];
+        this.outputs = [];
         this.gates = [];
         this.wires = [];
 
-        this.COMPONENTS_TURN = false;
-        this.WIRES_TURN = true;
+        // this.COMPONENTS_TURN = false;
+        // this.WIRES_TURN = true;
 
         this.bulbs_option_buttons = $(".bulbs-option-button");
         this.bulbs_option_buttons.click(this.onBulbOptionButton)
@@ -22,8 +24,50 @@ class Board {
         this.output_bulbs_length = 1;
         this.output_bulbs_line = $("#output-bulbs-line");
 
-        this.updateBulbsLength();
+        this.saved_components = {}
 
+        this.updateBulbsLength();
+        this.loadSavedComponents();
+        this.handleToolComponentClicks();
+
+    }
+    handleToolComponentClicks() {
+        this.componentToolButtons = $(".ALU-Component-tool");
+
+        this.componentToolButtons.click(function () {
+            const clickedComponent = $(this).data("gate");
+            board.add(clickedComponent);
+        });
+    }
+
+    loadSavedComponents() {
+
+        this.components_index = JSON.parse(
+            localStorage.getItem("components")
+        );
+
+        for (const component of this.components_index) {
+            const component_object = JSON.parse(
+                localStorage.getItem(component)
+            )
+
+            const component_element = $(` <div class="ALU-Component-tool notcustom ${component}" data-gate="${component}" id="${component}">
+                <div class="component-inner">
+                    <div class="component-image">
+                        <div class="ALU-Component-border">
+                            <div class="ALU-Component-bg" data-click="COMPONENT">
+                                <p class="m-0 fw-bold" data-click="COMPONENT">${component}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>`);
+            this.board_toolspanel.append(
+                component_element
+            );
+
+            this.saved_components[component] = component_object;
+        }
 
     }
 
@@ -34,12 +78,12 @@ class Board {
 
         switch (type) {
             case "less-input":
-                if (board.input_bulbs_length > 2) {
+                if (board.input_bulbs_length > 1) {
                     board.input_bulbs_length--;
                 }
                 break;
             case "plus-input":
-                if (board.input_bulbs_length < 10) {
+                if (board.input_bulbs_length < 16) {
                     board.input_bulbs_length++;
                 }
                 break;
@@ -64,7 +108,8 @@ class Board {
     updateBulbsLength() {
 
         // inicializo las bulbs
-        this.bulbs = [];
+        this.inputs = [];
+        this.outputs = [];
 
 
         // INPUTs
@@ -77,7 +122,7 @@ class Board {
                 `<div 
                     class="bulb input-bulb"
                     data-click="INPUT-BULB"
-                    data-index="${this.bulbs.length}"
+                    data-index="${this.inputs.length}"
                     style="top:${input_top}%;"
                 >
                 </div>`
@@ -86,8 +131,8 @@ class Board {
             input_top += input_top_increase;
 
             // add BULB to list
-            this.bulbs.push(
-                new BULB(this.bulbs.length, true, currentBulb)
+            this.inputs.push(
+                new BULB(this.inputs.length, true, currentBulb)
             )
         }
 
@@ -102,7 +147,7 @@ class Board {
                 `<div 
                     class="bulb output-bulb"
                     data-click="OUTPUT-BULB"
-                    data-index="${this.bulbs.length}"
+                    data-index="${this.outputs.length}"
                     style="top:${output_top}%;"
                 >
                 </div>`
@@ -111,8 +156,8 @@ class Board {
             output_top += output_top_increase;
 
             // add BULB to list
-            this.bulbs.push(
-                new BULB(this.bulbs.length, false, currentBulb)
+            this.outputs.push(
+                new BULB(this.outputs.length, false, currentBulb)
             )
         }
 
@@ -137,6 +182,9 @@ class Board {
                 );
                 break;
             default:
+                this.gates.push(
+                    new WILDCART(component, this.gates.length, this.saved_components[component])
+                );
                 break;
         }
     }
@@ -148,24 +196,58 @@ class Board {
         );
         return wire;
     }
+    removeGate(elementImage) {
+
+        const gate = this.getGateByImageElement(elementImage);
+
+        for (const key in gate.dots) {
+            if (Object.hasOwnProperty.call(gate.dots, key)) {
+                const dot = gate.dots[key];
+                for (const wire of dot.wires) {
+                    this.removeWire(wire.index);
+                }
+
+            }
+        }
+
+        delete gate.element.remove();
+        this.gates.splice(gate.index, 1);
+
+        for (let index = 0; index < this.gates.length; index++) {
+            const gate = this.gates[index];
+
+            gate.index = index;
+            gate.element.attr("data-index", index);
+        }
+
+        this.reload();
+    }
+    removeWireFromDot(dot, wire) {
+        dot.wires = dot.wires.filter(w => w.index !== wire.index)
+    }
     removeWire(index) {
 
         const wire = board.wires[index];
-        wire.dotStart.wire = undefined;
 
-        if (wire.componentStart.name !== "BULB") {
-            wire.dotStart.unglow();
-        }
-        wire.dotTarget.wire = undefined;
-        if (wire.componentTarget.name !== "BULB") {
+        // quitar a los dots a los que estoy unidos
+        // mi referencia entre los wires a los que dice estar unirse
+        if (wire.dotTarget) {
             wire.dotTarget.unglow();
+            this.removeWireFromDot(wire.dotStart, wire);
+        }
+        if (wire.dotTarget) {
+            wire.dotTarget.unglow();
+            this.removeWireFromDot(wire.dotTarget, wire);
         }
 
+        // quitar el elemento del DOM
         const wireElement = wire.element[0];
         wireElement.remove();
 
+        // quitarlo de la lista de wires
         this.wires.splice(index, 1);
 
+        // reasignar los indexes
         for (let index = 0; index < this.wires.length; index++) {
             const wire = this.wires[index];
 
@@ -173,30 +255,54 @@ class Board {
             wire.element.attr("data-index", index);
         }
 
+        // recargar el circuito
         this.reload();
 
     }
 
     getDotByElement(dotElement) {
+
         const gateElement = dotElement.parentElement.parentElement.parentElement.parentElement;
         const gateIndex = parseInt(gateElement.dataset.index);
         const gate = board.gates[gateIndex];
 
         const dotType = dotElement.parentElement.dataset.type;
+
         return gate.dots[dotType];
     }
     getGateByImageElement(imageElement) {
-        const gateElement = imageElement.parentElement.parentElement.parentElement;
+
+        const tagName = imageElement.tagName;
+        let gateElement = undefined;
+
+        if (tagName === "P") {
+            gateElement = imageElement.parentElement.parentElement.parentElement.parentElement.parentElement;
+        }
+        if (tagName === "DIV") {
+            gateElement = imageElement.parentElement.parentElement.parentElement.parentElement;
+        }
+
         const index = gateElement.dataset.index;
         if (!index) return;
         const component = board.gates[index];
         return component;
     }
+    getWireFromTextureElement(elementTexture) {
+        const wireElement = elementTexture.parentElement.parentElement.parentElement;
+        const index = wireElement.dataset.index;
+        if (!index) return;
+        const wire = board.wires[index];
+        return wire;
+    }
     getBulbByElement(bulbElement) {
         const index = bulbElement.dataset.index;
+        const inout = bulbElement.dataset.click;
         if (!index) return;
-        const bulb = board.bulbs[index];
-        return bulb;
+        if (inout === "INPUT-BULB") {
+            return board.inputs[index];
+        } else {
+            return board.outputs[index];
+        }
     }
 
     addToNextComponentsToReload(arr, indexs, component) {
@@ -209,207 +315,116 @@ class Board {
 
     reload() {
 
-        for (const bulb of this.bulbs) {
+
+        for (const bulb of this.inputs) {
             bulb.transmit();
         }
 
         for (const gate of this.gates) {
 
             // si ni un input tiene cable
-            const isUnconnectedGate = gate.inputDots.every(d=>!d.wire);
+            const isUnconnectedGate = gate.inputDots.every(d => !d.wire);
 
-            if(isUnconnectedGate){
+            if (isUnconnectedGate) {
                 gate.test();
             }
 
         }
 
-        // let nextComponentsToReload = [];
-
-        // por cada batería...
-        // for (const component of this.gates) {
-
-        //     if (component.name === "BULB") {
-        //         // si la batería tiene cable
-        //         const wire = component.dots.out1.wire;
-        //         if (wire) {
+    }
 
 
+    save(name) {
 
-        //             // const indexs = nextComponentsToReload.map(x => x.index);
-        //             if (wire.componentStart.name === "BULB") {
+        let newGate = {
+            "inputs": [],
+            "outputs": [],
+            "components": []
+        }
 
-        //                 wire.indexFrom = wire.componentStart.index;
-        //                 // this.addToNextComponentsToReload(nextComponentsToReload, indexs, wire.componentTarget);
+        for (const bulb of this.inputs) {
+            let input = { "connections": [] };
 
-        //             } else if (wire.componentTarget.name === "BULB") {
+            for (const wire of bulb.wires) {
+                console.log(wire.dotTarget);
+                // si va del input al output directamente
+                if (wire.dotTarget.name === "BULB") {
+                    input.connections.push(
+                        {
+                            "bulbindex": wire.dotTarget.index
+                        }
+                    );
+                } else {
+                    input.connections.push(
+                        {
+                            "componentindex": wire.dotTarget.componentParent.index,
+                            "dotindex": wire.dotTarget.name
+                        }
+                    )
+                }
+            }
 
-        //                 wire.indexFrom = wire.componentTarget.index;
-        //                 // this.addToNextComponentsToReload(nextComponentsToReload, indexs, wire.componentStart);
+            newGate.inputs.push(input);
+        }
+        for (const _ of this.outputs) {
+            newGate.outputs.push(false);
+        }
 
-        //             }
+        for (const gate of this.gates) {
 
-        //             wire.glow();
+            let component = { "type": gate.name, "connections": {  } };
 
-        //         }
-        //     } else if (component.name === "NOT") {
+            if (["AND", "OR"].includes(gate.name)) {
+                component.inputs = [false, false];
+                component.outputs = [false];
+            } else if ("NOT" == gate.name) {
+                component.inputs = [false];
+                component.outputs = [false];
+            } else {
+                component.inputs = gate.inputDots.map(_ => false);
+                component.outputs = gate.outputDots.map(_ => false);
+            }
 
-        //         if (!component.dots.in1.glowed) {
-        //             component.dots.out1.glow();
-        //             if (component.dots.out1.wire) {
-        //                 component.dots.out1.wire.glow();
-        //             }
-        //         }
+            for (const dot of gate.outputDots) {
+                
+                component.connections[dot.name] = [];
 
-        //     }
+                for (const wire of dot.wires) {
+                    let connection = undefined;
+                    if (wire.dotTarget.name === "BULB") {
+                        connection = {
+                            "bulbindex": wire.dotTarget.index
+                        }
+                    } else {
+                        connection = {
+                            "componentindex": wire.dotTarget.componentParent.index,
+                            "dotindex": wire.dotTarget.name
+                        }
+                    }
 
-        // }
+                    component.connections[dot.name].push(connection);
+                }
 
-        // let i = 0;
-        // let max = 5;
-        // let wiresOrComponetsTurn = this.COMPONENTS_TURN;
-        // while (nextComponentsToReload.length !== 0) {
+            }
 
-        //     // i++;
-        //     // if(i === max){
-        //     //     console.log("break");
-        //     //     break
-        //     // }
+            newGate.components.push(component);
 
-        //     let newNextComponentsToReload = [];
+        }
 
-        //     for (const component of nextComponentsToReload) {
 
-        //         // si es un componente, compruebo cual para hacer la lógica
-        //         if (wiresOrComponetsTurn === this.COMPONENTS_TURN) {
+        // add current new component to components index
+        let componentsIndex = JSON.parse(
+            localStorage.getItem("components")
+        );
+        componentsIndex.push(name);
+        localStorage.setItem("components", JSON.stringify(componentsIndex));
 
-        //             let wire = undefined;
-        //             if (component.name === "AND") {
-        //                 wire = this.testAND(component);
-        //             } else if (component.name === "OR") {
-        //                 wire = this.testOR(component);
-        //             } else if (component.name === "NOT") {
-        //                 wire = this.testNOT(component);
-        //             }
-
-        //             if (wire) {
-        //                 wire.indexFrom = component.index;
-        //                 const indexs = newNextComponentsToReload.map(x => x.index);
-        //                 this.addToNextComponentsToReload(newNextComponentsToReload, indexs, wire);
-        //             }
-
-        //         }
-
-        //         if (wiresOrComponetsTurn === this.WIRES_TURN) {
-
-        //             const wire = component;
-
-        //             const indexs = newNextComponentsToReload.map(x => x.index);
-
-        //             // si el START no el componente de donde vengo
-        //             if (wire.componentStart.index !== wire.indexFrom) {
-        //                 // compruebo si está activo el componente de donde SÍ VENGO
-        //                 if (wire.componentTarget.dots.out1.glowed) {
-        //                     wire.glow();
-        //                 }
-        //                 // añado a la lista el componente de donde NO VENGO
-        //                 this.addToNextComponentsToReload(newNextComponentsToReload, indexs, wire.componentStart);
-        //             } else {
-        //                 if (wire.componentStart.dots.out1.glowed) {
-        //                     wire.glow();
-        //                 }
-        //                 this.addToNextComponentsToReload(newNextComponentsToReload, indexs, wire.componentTarget);
-        //             }
-
-        //         }
-
-        //     }
-
-        //     nextComponentsToReload = [...newNextComponentsToReload];
-
-        //     // cambiamos de turno
-        //     wiresOrComponetsTurn = !wiresOrComponetsTurn;
-
-        //     console.log(nextComponentsToReload);
-
-        //     // break;
-
-        // }
-
+        // save new component
+        localStorage.setItem(name, JSON.stringify(newGate))
 
 
     }
 
-    testAND(component) {
-        const in1 = component.dots.in1;
-        if (in1.wire) {
-            if (in1.wire.glowed) {
-                in1.glow();
-            }
-        }
-        const in2 = component.dots.in2;
-        if (in2.wire) {
-            if (in2.wire.glowed) {
-                in2.glow();
-            }
-        }
-
-        if (in1.glowed && in2.glowed) {
-            component.dots.out1.glow();
-        } else {
-            component.dots.out1.unglow();
-        }
-
-        if (component.dots.out1.wire) {
-            return component.dots.out1.wire;
-        }
-
-    }
-    testOR(component) {
-        const in1 = component.dots.in1;
-        if (in1.wire) {
-            if (in1.wire.glowed) {
-                in1.glow();
-            }
-        }
-        const in2 = component.dots.in2;
-        if (in2.wire) {
-            if (in2.wire.glowed) {
-                in2.glow();
-            }
-        }
-
-        if (in1.glowed || in2.glowed) {
-            component.dots.out1.glow();
-        } else {
-            component.dots.out1.unglow();
-        }
-
-        if (component.dots.out1.wire) {
-            return component.dots.out1.wire;
-        }
-
-    }
-    testNOT(component) {
-        const in1 = component.dots.in1;
-        if (in1.wire) {
-            if (in1.wire.glowed) {
-                in1.glow();
-            }
-        }
-
-        if (in1.glowed) {
-            component.dots.out1.unglow();
-        } else {
-            component.dots.out1.glow();
-        }
-
-        console.log(component.dots.out1);
-        if (component.dots.out1.wire) {
-            return component.dots.out1.wire;
-        }
-
-    }
 
 
 }
